@@ -48,10 +48,9 @@ class ExtSougouScel():
 
     def getPyTable(self, data):
         # '''获取拼音表'''
-
+        #
         # if data[0:4] != "\x9D\x01\x00\x00":
-        #     print 'Are u sure this is a sogou pinyin table?'
-        #     return
+        #     print ('Are u sure this is a sogou pinyin table?')
         data = data[4:]
         pos = 0
         length = len(data)
@@ -96,35 +95,33 @@ class ExtSougouScel():
                 # 词频
                 count = byte2ord(data[pos:pos + 2])
 
-                # print (byte2str(data[pos + 2, pos + ext_len]))
+                # 到下个词的偏移位置
                 pos += ext_len
 
                 # 保存
-                print (c_len, ext_len)
-                print (count, py, word)
-                # self.GTable.append('\001'.join([count, py, word]))
-                # 到下个词的偏移位置
+                # print (c_len, ext_len)
+                # print (count, py, word)
+                self.GTable.append('\001'.join([word, py, str(count)]))
 
     def deal_from_content(self, data):
         if data[0:12] != b'@\x15\x00\x00DCS\x01\x01\x00\x00\x00':
             print("Are u sure this is sogou scel data")
-            exit(-1)
         info_dict = {}
-        for i in range(0, len(data), 2):
-            if byte2ord(data[i:i+2]) == 0:
-                continue
-            print ('[', i, i+2, ']', byte2ord(data[i:i+2]), byte2chr(data[i:i+2]))
-        exit(-1)
-        # print(byte2str(data).replace('\x00', ''))
-        # print (byte2str(data).strip().replace('\x00', ''))
-        # info_dict['name'] = byte2str(data[0x130:0x338])
+        # for i in range(0, len(data), 2):
+        #     if byte2ord(data[i:i+2]) == 0:
+        #         continue
+        #     print ('[', i, i+2, ']', byte2ord(data[i:i+2]), byte2chr(data[i:i+2]))
+        info_dict['raw_name'] = byte2str(data[0x130:0x338]).strip().replace('\x00', '')
         info_dict['type'] = byte2str(data[0x338:0x540]).strip().replace('\x00', '')
         info_dict['describe'] = byte2str(data[0x540:0xd40]).strip().replace('\x00', '')
-        # info_dict['raw_example'] =  byte2str(data[0xd40:self.startPy])
-        self.getPyTable(data[self.startPy:self.startChinese])
-        self.getChinese(data[self.startChinese:])
+        info_dict['raw_example'] = byte2str(data[0xd40:self.startPy]).replace('\x00', '')
+        try:
+            self.getPyTable(data[self.startPy:self.startChinese])
+            self.getChinese(data[self.startChinese:])
+        except:
+            print ('[error happen in deal_from_content]')
+
         info_dict['content'] = ' '.join(self.GTable).strip().replace('\x00', '')
-        exit(-1)
         return info_dict
         # print (self.GPy_Table)
         # exit(-1)
